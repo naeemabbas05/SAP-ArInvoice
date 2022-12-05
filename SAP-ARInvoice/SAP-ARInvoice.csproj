@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>SAP_ARInvoice</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Interop.SAPbobsCOM">
+      <HintPath>C:\Users\AMCS\Desktop\Interop.SAPbobsCOM.dll</HintPath>
+    </Reference>
+    <Reference Include="SAPB1">
+      <HintPath>C:\Users\AMCS\Desktop\SAPB1.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+
+</Project>
