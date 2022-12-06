@@ -4,7 +4,7 @@ namespace SAP_ARInvoice.Model.Setting
 {
     public class Setting
     {
-        public string dbConnection { get; set; }
+        public string DbConnection { get; set; }
         public string Server { get; set; }
         public string CompanyDB { get; set; }
         public string DbUserName { get; set; }

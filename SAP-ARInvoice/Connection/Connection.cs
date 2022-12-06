@@ -4,14 +4,19 @@ using System;
 
 namespace SAP_ARInvoice.Connection
 {
-    public class Connection
+    public class SAP_Connection
     {
         private SAPbobsCOM.Company company = new SAPbobsCOM.Company();
         private int connectionResult;
         private int errorCode = 0;
         private string errorMessage = "";
         private Setting _setting;
-        public Connection(IOptions<Setting> setting) {
+
+        public SAP_Connection()
+        {
+        }
+
+        public SAP_Connection(IOptions<Setting> setting) {
             _setting = setting.Value;
         }
 
