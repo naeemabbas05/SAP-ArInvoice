@@ -6,12 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Interop.SAPbobsCOM">
-      <HintPath>C:\Users\AMCS\Desktop\Interop.SAPbobsCOM.dll</HintPath>
-    </Reference>
-    <Reference Include="SAPB1">
-      <HintPath>C:\Users\AMCS\Desktop\SAPB1.dll</HintPath>
-    </Reference>
+    <COMReference Include="SAPbobsCOM">
+      <WrapperTool>tlbimp</WrapperTool>
+      <VersionMinor>0</VersionMinor>
+      <VersionMajor>10</VersionMajor>
+      <Guid>fc8030be-f5d2-4b8e-8f92-44228fe30100</Guid>
+      <Lcid>0</Lcid>
+      <Isolated>false</Isolated>
+      <EmbedInteropTypes>true</EmbedInteropTypes>
+    </COMReference>
   </ItemGroup>
 
 
