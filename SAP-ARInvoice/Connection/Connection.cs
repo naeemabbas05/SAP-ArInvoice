@@ -14,15 +14,11 @@ namespace SAP_ARInvoice.Connection
 {
     public class SAP_Connection
     {
-        private SAPbobsCOM.Company company = new SAPbobsCOM.Company();
+        private Company company = new Company();
         private int connectionResult;
         private int errorCode = 0;
         private string errorMessage = "";
         private Setting _setting;
-
-        public SAP_Connection()
-        {
-        }
 
         public SAP_Connection(IOptions<Setting> setting) {
             _setting = setting.Value;
@@ -30,15 +26,14 @@ namespace SAP_ARInvoice.Connection
 
         public int Connect()
         {
-
             company.Server = _setting.Server;
             company.CompanyDB = _setting.CompanyDB;
-            company.DbServerType = SAPbobsCOM.BoDataServerTypes.dst_HANADB;
+            company.DbServerType = BoDataServerTypes.dst_HANADB;
             company.DbUserName = _setting.DbUserName;
             company.DbPassword = _setting.DbPassword;
             company.UserName = _setting.UserName;
             company.Password = _setting.Password;
-            company.language = SAPbobsCOM.BoSuppLangs.ln_English;
+            company.language = BoSuppLangs.ln_English;
             company.UseTrusted = _setting.UseTrusted;
             company.LicenseServer = _setting.LicenseServer;
 
@@ -51,7 +46,7 @@ namespace SAP_ARInvoice.Connection
 
             return connectionResult;
         }
-        public SAPbobsCOM.Company GetCompany()
+        public Company GetCompany()
         {
             return this.company;
         }
@@ -65,7 +60,6 @@ namespace SAP_ARInvoice.Connection
         {
             return this.errorMessage;
         }
-
 
         public List<DataModel> ArInvoice_SP(string SpName)
         {
@@ -114,7 +108,6 @@ namespace SAP_ARInvoice.Connection
                 var data = response.Content.ReadAsStringAsync().Result;
 
                 modelResponse = JsonConvert.DeserializeObject<List<DataModel>>(data);
-            
             }
 
             return modelResponse;
