@@ -9,6 +9,8 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace SAP_ARInvoice.Connection
 {
@@ -20,12 +22,8 @@ namespace SAP_ARInvoice.Connection
         private string errorMessage = "";
         private Setting _setting;
 
-        public SAP_Connection()
-        {
-        }
-
-        public SAP_Connection(IOptions<Setting> setting) {
-            _setting = setting.Value;
+        public SAP_Connection(Setting setting) {
+            _setting = setting;
         }
 
         public int Connect()
@@ -67,9 +65,9 @@ namespace SAP_ARInvoice.Connection
         }
 
 
-        public List<DataModel> ArInvoice_SP(string SpName)
+        public async Task<List<T>> ArInvoice_SP<T>(string SpName)
         {
-            List<DataModel> dataModel = new List<DataModel>();
+            List<T> dataModel = new List<T>();
             try
             {
                 string ConnectionString = _setting.DbConnection;
@@ -81,13 +79,20 @@ namespace SAP_ARInvoice.Connection
                     };
                     connection.Open();
                     SqlDataReader sdr = cmd.ExecuteReader();
-                   
+
+                    T obj = default(T);
+
                     while (sdr.Read())
                     {
-                        dataModel.Add(new DataModel()
+                        obj = Activator.CreateInstance<T>();
+                        foreach (PropertyInfo prop in obj.GetType().GetProperties())
                         {
-                            Id= int.Parse(sdr["Id"].ToString())
-                    });
+                            if (!object.Equals(sdr[prop.Name], DBNull.Value))
+                            {
+                                prop.SetValue(obj, sdr[prop.Name], null);
+                            }
+                        }
+                        dataModel.Add(obj);
                     }
                 }
             }
@@ -99,9 +104,9 @@ namespace SAP_ARInvoice.Connection
             return dataModel;
         }
 
-        public List<DataModel> ArInvoice_API(string baseURI)
+        public List<T> ArInvoice_API<T>(string baseURI)
         {
-            List<DataModel> modelResponse = new List<DataModel>();
+            List<T> modelResponse = new List<T>();
             HttpClient client = new HttpClient();
 
             client.BaseAddress = new Uri(baseURI);
@@ -113,7 +118,7 @@ namespace SAP_ARInvoice.Connection
             {
                 var data = response.Content.ReadAsStringAsync().Result;
 
-                modelResponse = JsonConvert.DeserializeObject<List<DataModel>>(data);
+                modelResponse = JsonConvert.DeserializeObject<List<T>>(data);
             
             }
 
