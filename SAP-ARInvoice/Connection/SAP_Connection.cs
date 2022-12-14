@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -65,7 +66,7 @@ namespace SAP_ARInvoice.Connection
         }
 
 
-        public async Task<List<T>> ArInvoice_SP<T>(string SpName)
+        public async Task<List<T>> ArInvoice_SP<T>(string SpName,IDictionary<string,string> parameters)
         {
             List<T> dataModel = new List<T>();
             try
@@ -77,6 +78,12 @@ namespace SAP_ARInvoice.Connection
                     {
                         CommandType = CommandType.StoredProcedure
                     };
+
+                    foreach (var parameter in parameters)
+                    {
+                        cmd.Parameters.AddWithValue(parameter.Key,parameter.Value);
+                    }
+                       
                     connection.Open();
                     SqlDataReader sdr = cmd.ExecuteReader();
 
@@ -89,7 +96,7 @@ namespace SAP_ARInvoice.Connection
                         {
                             if (!object.Equals(sdr[prop.Name], DBNull.Value))
                             {
-                                prop.SetValue(obj, sdr[prop.Name], null);
+                                prop.SetValue(obj, sdr[prop.Name].ToString(), null);
                             }
                         }
                         dataModel.Add(obj);
@@ -100,6 +107,7 @@ namespace SAP_ARInvoice.Connection
             {
                 Console.WriteLine($"Exception Occurred: {ex.Message}");
             }
+
 
             return dataModel;
         }
