@@ -10,6 +10,7 @@ using SAP_ARInvoice.Model.Setting;
 using SAP_ARInvoice.Service;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -35,7 +36,7 @@ namespace SAP_ARInvoice
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -52,6 +53,7 @@ namespace SAP_ARInvoice
             {
                 endpoints.MapControllers();
             });
+            loggerFactory.AddFile($@"{Directory.GetCurrentDirectory()}/Logs/log.txt");
         }
     }
 }
