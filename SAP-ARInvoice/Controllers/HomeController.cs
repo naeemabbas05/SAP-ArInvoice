@@ -51,93 +51,90 @@ namespace SAP_ARInvoice.Controllers
                     }
 
 
-
-                    return "SAP B1 Background service";
                     invoice = connection.GetCompany().GetBusinessObject(BoObjectTypes.oInvoices);
 
-                    invoice.CardCode = "Walking";
+                    invoice.CardCode = singleInvoice.CustName;
                     invoice.DocDueDate = DateTime.Now;
                     invoice.DocDate = DateTime.Now;
-
                     //UDF Invoice 
                     //invoice.UserFields.Fields.Item("bill_no").Value = "";
 
-                    invoice.Lines.ItemCode = "FG-000031";
-                    invoice.Lines.ItemDescription = "QME-FG";
-                    //invoice.Lines.WarehouseCode = "05";
-                    invoice.Lines.Quantity = 1;
-                    invoice.Lines.UnitPrice = 1000;
-                    //Branch
-                    //invoice.Lines.COGSCostingCode3 = "";
-                    //UDF Invoice Lines
-                    //invoice.Lines.UserFields.Fields.Item("bank").Value = "HBL";
-                    //invoice.Lines.UserFields.Fields.Item("bank_discount").Value = "00:00";
-                    //invoice.Lines.UserFields.Fields.Item("tax_code").Value = "";
-                    //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
+                    foreach (var OrderItem in singleInvoice.OrderDetail) {
+
+                        invoice.Lines.ItemCode = OrderItem.ItemCode;
+                        invoice.Lines.ItemDescription = OrderItem.ItemCode;
+                        //invoice.Lines.WarehouseCode = "05";
+                        invoice.Lines.Quantity = OrderItem.Quantity;
+                        //Branch
+                        //invoice.Lines.COGSCostingCode3 = "";
+                        //UDF Invoice Lines
+                        //invoice.Lines.UserFields.Fields.Item("bank").Value = "HBL";
+                        //invoice.Lines.UserFields.Fields.Item("bank_discount").Value = "00:00";
+                        //invoice.Lines.UserFields.Fields.Item("tax_code").Value = "";
+                        //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
 
 
-                    #region Batch wise Item
-                    SAPbobsCOM.Items product = null;
-                    SAPbobsCOM.Recordset recordSet = null;
-                    SAPbobsCOM.Recordset recordSetOBTN = null;
-                    recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
-                    recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
-                    product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
+                        #region Batch wise Item
+                        SAPbobsCOM.Items product = null;
+                        SAPbobsCOM.Recordset recordSet = null;
+                        SAPbobsCOM.Recordset recordSetOBTN = null;
+                        recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
+                        recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
+                        product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                    recordSet.DoQuery($"SELECT \"ItemCode\" FROM \"OITT\" WHERE \"Code\"='{"ProductId"}'");
-                    if (recordSet.RecordCount == 0)
-                    {
-                        while (!recordSet.EoF)
+                        recordSet.DoQuery($"SELECT \"ItemCode\" FROM \"OITT\" WHERE \"Code\"='{"ProductId"}'");
+                        if (recordSet.RecordCount == 0)
                         {
-                            var itemCode = recordSet.Fields.Item(0).Value.ToString();
-                            recordSetOBTN.DoQuery($"SELECT \"ItemCode\",\"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{"itemCode"}'  Order By \"ExpDate\"");
-                            var CurrentQuantity = 10;//Quantity
-                            while (!recordSetOBTN.EoF)
+                            while (!recordSet.EoF)
                             {
-                                if (CurrentQuantity <= 0) continue;
-
-                                var ChildItemCode = recordSet.Fields.Item(0).Value.ToString();
-                                var ExpDate = recordSet.Fields.Item(1).Value.ToString();
-                                var AvailableQuantity = recordSet.Fields.Item(2).Value.ToString();
-                                var BatchNumber = recordSet.Fields.Item(3).Value.ToString();
-                                if (AvailableQuantity <= 0) continue;
-                                invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
-                                invoice.Lines.BatchNumbers.ItemCode = ChildItemCode;
-                                invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
-
-                                if (AvailableQuantity >= CurrentQuantity)
+                                var itemCode = recordSet.Fields.Item(0).Value.ToString();
+                                recordSetOBTN.DoQuery($"SELECT \"ItemCode\",\"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{"itemCode"}'  Order By \"ExpDate\"");
+                                var CurrentQuantity = OrderItem.Quantity;
+                                while (!recordSetOBTN.EoF)
                                 {
-                                    invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
-                                    CurrentQuantity = 0;
+                                    if (CurrentQuantity <= 0) continue;
+
+                                    var ChildItemCode = recordSet.Fields.Item(0).Value.ToString();
+                                    var ExpDate = recordSet.Fields.Item(1).Value.ToString();
+                                    var AvailableQuantity = recordSet.Fields.Item(2).Value.ToString();
+                                    var BatchNumber = recordSet.Fields.Item(3).Value.ToString();
+                                    if (AvailableQuantity <= 0) continue;
+                                    invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
+                                    invoice.Lines.BatchNumbers.ItemCode = ChildItemCode;
+                                    invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
+
+                                    if (AvailableQuantity >= CurrentQuantity)
+                                    {
+                                        invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
+                                        CurrentQuantity = 0;
+                                    }
+                                    else
+                                    {
+                                        invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
+                                        CurrentQuantity = CurrentQuantity - AvailableQuantity;
+
+                                    }
+                                    invoice.Lines.BatchNumbers.Add();
                                 }
-                                else
+                                if (!CurrentQuantity.Equals(0))
                                 {
-                                    invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
-                                    CurrentQuantity = CurrentQuantity - AvailableQuantity;
-
+                                    _logger.LogError($"Not Enough Data in Given Batch");
+                                    return "SAP B1 Background service";
                                 }
-                                invoice.Lines.BatchNumbers.Add();
-                            }
-                            if (!CurrentQuantity.Equals(0))
-                            {
-                                _logger.LogError($"Not Enough Data in Given Batch");
-                                return "SAP B1 Background service";
-                            }
 
 
+                            }
                         }
+                        else
+                        {
+                            _logger.LogError($"No BOM found angainst given Item {"ProductId"}");
+                            return "SAP B1 Background service";
+                        }
+                        #endregion
+
+
+                        invoice.Lines.Add();
                     }
-                    else
-                    {
-                        _logger.LogError($"No BOM found angainst given Item {"ProductId"}");
-                        return "SAP B1 Background service";
-                    }
-                    #endregion
-
-
-                    invoice.Lines.Add();
-
-
 
                     if (invoice.Add() == 0)
                     {
@@ -152,8 +149,6 @@ namespace SAP_ARInvoice.Controllers
                     }
                     connection.GetCompany().Disconnect();
                 }
-
-                
             }
             else
             {
@@ -195,7 +190,8 @@ namespace SAP_ARInvoice.Controllers
                     {
                         product.ItemCode = item.ItemCode;
                         product.ItemName = item.ItemDescription;
-                        product.ProdStdCost = Double.Parse(item.UnitPrice);
+                        //need to check
+                        //product. = Double.Parse(item.UnitPrice);
 
                         var resp = product.Add();
                         if (resp.Equals(0))
@@ -222,7 +218,6 @@ namespace SAP_ARInvoice.Controllers
             BusinessPartners businessPartners = null;
             recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
             businessPartners = connection.GetCompany().GetBusinessObject(BoObjectTypes.oBusinessPartners);
-
 
             recordSet.DoQuery($"SELECT * FROM \"OCRD\" WHERE \"CardCode\"='{CustomerId}'");
             if (recordSet.RecordCount == 0)
