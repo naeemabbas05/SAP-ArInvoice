@@ -136,14 +136,6 @@ namespace SAP_ARInvoice.Controllers
                         invoice.Lines.Add();
                     }
 
-                  
-
-                
-
-                 
-
-
-
                     if (invoice.Add() == 0)
                     {
                         Console.WriteLine("Success:Record added successfully");
@@ -157,8 +149,6 @@ namespace SAP_ARInvoice.Controllers
                     }
                     connection.GetCompany().Disconnect();
                 }
-
-                
             }
             else
             {
@@ -200,7 +190,8 @@ namespace SAP_ARInvoice.Controllers
                     {
                         product.ItemCode = item.ItemCode;
                         product.ItemName = item.ItemDescription;
-                        product.ProdStdCost = Double.Parse(item.UnitPrice);
+                        //need to check
+                        //product. = Double.Parse(item.UnitPrice);
 
                         var resp = product.Add();
                         if (resp.Equals(0))
@@ -227,7 +218,6 @@ namespace SAP_ARInvoice.Controllers
             BusinessPartners businessPartners = null;
             recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
             businessPartners = connection.GetCompany().GetBusinessObject(BoObjectTypes.oBusinessPartners);
-
 
             recordSet.DoQuery($"SELECT * FROM \"OCRD\" WHERE \"CardCode\"='{CustomerId}'");
             if (recordSet.RecordCount == 0)
