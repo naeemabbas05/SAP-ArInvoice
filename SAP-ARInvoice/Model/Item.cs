@@ -8,7 +8,8 @@ namespace SAP_ARInvoice.Model
     public class Item
     {
         public string ItemCode { get; set; }
-        public string ItemName { get; set; }
-        public double Price { get; set; }
+        public string ItemDescription { get; set; }
+        public string Quantity { get; set; }
+        public string UnitPrice { get; set; }
     }
 }
