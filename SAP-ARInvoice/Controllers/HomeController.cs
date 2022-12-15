@@ -82,39 +82,43 @@ namespace SAP_ARInvoice.Controllers
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        recordSet.DoQuery($"SELECT \"ItemCode\" FROM \"OITT\" WHERE \"Code\"='{"ProductId"}'");
-                        if (recordSet.RecordCount == 0)
+                        recordSet.DoQuery($"SELECT \"Code\" FROM \"ITT1\" WHERE \"Father\"='{OrderItem.ItemCode}'");
+                        if (recordSet.RecordCount != 0)
                         {
                             while (!recordSet.EoF)
                             {
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
-                                recordSetOBTN.DoQuery($"SELECT \"ItemCode\",\"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{"itemCode"}'  Order By \"ExpDate\"");
+                                recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
                                 var CurrentQuantity = OrderItem.Quantity;
-                                while (!recordSetOBTN.EoF)
+                                var TotalCount = recordSetOBTN.RecordCount;
+                                var CurrentCount = 0;
+
+                                while (TotalCount > CurrentCount)
                                 {
-                                    if (CurrentQuantity <= 0) continue;
+                                    if (CurrentQuantity > 0) {
+                                        var ExpDate = recordSetOBTN.Fields.Item(0).Value.ToString();
+                                        var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
+                                        var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
+                                        if (int.Parse(AvailableQuantity) > 0) {
+                                            invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
+                                            invoice.Lines.BatchNumbers.ItemCode = itemCode;
+                                            invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
 
-                                    var ChildItemCode = recordSet.Fields.Item(0).Value.ToString();
-                                    var ExpDate = recordSet.Fields.Item(1).Value.ToString();
-                                    var AvailableQuantity = recordSet.Fields.Item(2).Value.ToString();
-                                    var BatchNumber = recordSet.Fields.Item(3).Value.ToString();
-                                    if (AvailableQuantity <= 0) continue;
-                                    invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
-                                    invoice.Lines.BatchNumbers.ItemCode = ChildItemCode;
-                                    invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
-
-                                    if (AvailableQuantity >= CurrentQuantity)
-                                    {
-                                        invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
-                                        CurrentQuantity = 0;
+                                            if (AvailableQuantity >= CurrentQuantity)
+                                            {
+                                                invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
+                                                CurrentQuantity = 0;
+                                            }
+                                            else
+                                            {
+                                                invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
+                                                CurrentQuantity = CurrentQuantity - AvailableQuantity;
+                                            }
+                                            invoice.Lines.BatchNumbers.Add();
+                                        };
+                                       
                                     }
-                                    else
-                                    {
-                                        invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
-                                        CurrentQuantity = CurrentQuantity - AvailableQuantity;
-
-                                    }
-                                    invoice.Lines.BatchNumbers.Add();
+                                    CurrentCount += 1;
                                 }
                                 if (!CurrentQuantity.Equals(0))
                                 {
@@ -205,6 +209,10 @@ namespace SAP_ARInvoice.Controllers
 
                     }
 
+                }
+                else
+                {
+                    output = true;
                 }
             }
 
