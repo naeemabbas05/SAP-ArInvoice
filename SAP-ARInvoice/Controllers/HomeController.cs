@@ -131,7 +131,7 @@ namespace SAP_ARInvoice.Controllers
                         }
                         else
                         {
-                            _logger.LogError($"No BOM found angainst given Item {"ProductId"}");
+                            _logger.LogError($"No BOM found angainst given Item");
                             return "SAP B1 Background service";
                         }
                         #endregion
