@@ -34,7 +34,7 @@ namespace SAP_ARInvoice.Controllers
                 Documents invoice = null;
                 IDictionary<string, string> parameters = new Dictionary<string, string>();
                 parameters.Add("@Date", DateTime.Now.ToString("yyyy/MM/dd"));
-                List<Orders> invoices = await InvoiceMapper(await connection.ArInvoice_SP<DataModel>("[dbo].[SP_AR_Invoice]", parameters));
+                List<Orders> invoices = InvoiceMapper(await connection.ArInvoice_SP<DataModel>("[dbo].[SP_AR_Invoice]", parameters));
                 foreach (var singleInvoice in invoices) {
                     var userResponse = await CheckBussinessCustomer(singleInvoice.CustName);
                     if (!userResponse)
@@ -162,14 +162,15 @@ namespace SAP_ARInvoice.Controllers
         }
 
 
-        private async Task<List<Orders>> InvoiceMapper(List<DataModel> data) {
+        private List<Orders> InvoiceMapper(List<DataModel> data)
+        {
 
             List<Orders> orders = new List<Orders>();
-            List<DataModel> resp = data.Select(x=> new {x.CustName,x.OrderCode}).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode==x.OrderCode)).Distinct().ToList();
+            List<DataModel> resp = data.Select(x => new { x.CustName, x.OrderCode }).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode == x.OrderCode)).Distinct().ToList();
             foreach (var item in resp)
             {
-               var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode=x.ItemCode,Quantity=int.Parse(x.Quantity) }).Distinct().ToList();
-                orders.Add(new Orders() { CustName= item.CustName,OrderCode=item.OrderCode,OrderDate=item.OrderDate,OrderDetail= orderDetail });
+                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity) }).Distinct().ToList();
+                orders.Add(new Orders() { CustName = item.CustName, OrderCode = item.OrderCode, OrderDate = item.OrderDate, OrderDetail = orderDetail });
             }
 
             return orders;
@@ -194,8 +195,7 @@ namespace SAP_ARInvoice.Controllers
                     {
                         product.ItemCode = item.ItemCode;
                         product.ItemName = item.ItemDescription;
-                        //need to check
-                        //product. = Double.Parse(item.UnitPrice);
+                        product.PurchaseItemsPerUnit = Double.Parse(item.UnitPrice);
 
                         var resp = product.Add();
                         if (resp.Equals(0))
