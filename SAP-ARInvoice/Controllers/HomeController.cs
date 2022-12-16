@@ -37,6 +37,9 @@ namespace SAP_ARInvoice.Controllers
                 List<Orders> invoices = InvoiceMapper(await connection.ArInvoice_SP<DataModel>("[dbo].[SP_AR_Invoice]", parameters));
                 foreach (var singleInvoice in invoices) {
                     var userResponse = await CheckBussinessCustomer(singleInvoice.CustName);
+
+                
+
                     if (!userResponse)
                     {
                         _logger.LogError("Unable to Create New User");
@@ -50,6 +53,11 @@ namespace SAP_ARInvoice.Controllers
                         return "SAP B1 Background service";
                     }
 
+                    var invocieResponse = CheckIfInvoiceExist(singleInvoice.OrderCode);
+                    if (invocieResponse) {
+                        _logger.LogError("Invoice Already Exist");
+                        return "SAP B1 Background service";
+                    }
 
                     invoice = connection.GetCompany().GetBusinessObject(BoObjectTypes.oInvoices);
 
@@ -257,5 +265,22 @@ namespace SAP_ARInvoice.Controllers
             }
             return   output;
         }
+
+        private bool CheckIfInvoiceExist(string orderCode)
+        {
+            bool output = false;
+            SAPbobsCOM.Recordset recordSet = null;
+            recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
+            //Need to add Column Accordingly
+            recordSet.DoQuery($"SELECT * FROM \"OINV\" WHERE \"bill_no\"='{orderCode}'");
+            if (recordSet.RecordCount > 0)
+            {
+                output = true;
+            }
+            return output;
+
+        }
+
+
     }
 }
