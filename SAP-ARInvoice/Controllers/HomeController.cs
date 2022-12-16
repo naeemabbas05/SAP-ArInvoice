@@ -255,8 +255,6 @@ namespace SAP_ARInvoice.Controllers
             else {
                 output = true;
             }
-      
-
             return   output;
         }
     }
