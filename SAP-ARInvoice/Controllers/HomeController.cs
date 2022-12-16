@@ -142,21 +142,21 @@ namespace SAP_ARInvoice.Controllers
 
                     if (invoice.Add() == 0)
                     {
-                        Console.WriteLine("Success:Record added successfully");
+                        _logger.LogInformation($"Record added successfully");
 
                     }
                     else
                     {
                         var errCode = connection.GetCompany().GetLastErrorCode();
                         var response = connection.GetCompany().GetLastErrorDescription();
-                        Console.WriteLine("Error:Operation Unsuccessfull");
+                        _logger.LogError($"{errCode}:{response}");
                     }
                     connection.GetCompany().Disconnect();
                 }
             }
             else
             {
-                Console.WriteLine("Error " + connection.GetErrorCode() + ": " + connection.GetErrorMessage());
+                _logger.LogError(connection.GetErrorCode() + ": " + connection.GetErrorMessage());
             }
             return "SAP B1 Background service";
         }
