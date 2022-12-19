@@ -73,7 +73,7 @@ namespace SAP_ARInvoice.Controllers
                         invoice.Lines.ItemCode = OrderItem.ItemCode;
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
                         //invoice.Lines.WarehouseCode = OrderItem.WareHouse;
-                        //invoice.Lines.Quantity = OrderItem.Quantity;
+                        invoice.Lines.Quantity = OrderItem.Quantity;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
                         //UDF Invoice Lines
@@ -83,7 +83,7 @@ namespace SAP_ARInvoice.Controllers
                         //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
 
 
-                        //invoice.Lines.Add();
+                     
 
 
                         #region Batch wise Item
@@ -104,13 +104,11 @@ namespace SAP_ARInvoice.Controllers
                         {
                             while (BOMTotal > BOMCurrentCount)
                             {
-                                
-
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
                                 var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
 
-                                invoice.Lines.ItemCode = itemCode;
-                                invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
+                                //invoice.Lines.ItemCode = itemCode;
+                                //invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
                                 recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
                                 var TotalCount = recordSetOBTN.RecordCount;
@@ -150,7 +148,7 @@ namespace SAP_ARInvoice.Controllers
                                     _logger.LogError($"Not Enough Data in Given Batch");
                                     return "SAP B1 Background service";
                                 }
-                                invoice.Lines.Add();
+                                //invoice.Lines.Add();
                                 BOMCurrentCount += 1;
                                 recordSet.MoveNext();
                             }
@@ -162,6 +160,7 @@ namespace SAP_ARInvoice.Controllers
                         }
 
                         #endregion
+                        invoice.Lines.Add();
                     }
 
                     if (invoice.Add() == 0)
