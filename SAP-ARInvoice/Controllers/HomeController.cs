@@ -73,7 +73,7 @@ namespace SAP_ARInvoice.Controllers
                         invoice.Lines.ItemCode = OrderItem.ItemCode;
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
                         //invoice.Lines.WarehouseCode = OrderItem.WareHouse;
-                        invoice.Lines.Quantity = OrderItem.Quantity;
+                        //invoice.Lines.Quantity = OrderItem.Quantity;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
                         //UDF Invoice Lines
@@ -83,7 +83,7 @@ namespace SAP_ARInvoice.Controllers
                         //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
 
 
-                        invoice.Lines.Add();
+                        //invoice.Lines.Add();
 
 
                         #region Batch wise Item
@@ -107,21 +107,18 @@ namespace SAP_ARInvoice.Controllers
                                 
 
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
-                                var IngredientQuantity = recordSet.Fields.Item(1).Value.ToString();
+                                var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
 
                                 invoice.Lines.ItemCode = itemCode;
-                                invoice.Lines.Quantity = double.Parse(IngredientQuantity);
+                                invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
                                 recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
-                                var CurrentQuantity = OrderItem.Quantity;
                                 var TotalCount = recordSetOBTN.RecordCount;
                                 var CurrentCount = 0;
 
                                 while (TotalCount > CurrentCount)
                                 {
-                                   
-
-                                    if (CurrentQuantity > 0) {
+                                    if (IngredientQuantity > 0) {
                                         var ExpDate = recordSetOBTN.Fields.Item(0).Value.ToString();
                                         var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
                                         var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
@@ -131,15 +128,15 @@ namespace SAP_ARInvoice.Controllers
                                             invoice.Lines.BatchNumbers.ItemCode = itemCode;
                                             //invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
 
-                                            if (int.Parse(AvailableQuantity) >= CurrentQuantity)
+                                            if (int.Parse(AvailableQuantity) >= IngredientQuantity)
                                             {
-                                                invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
-                                                CurrentQuantity = 0;
+                                                invoice.Lines.BatchNumbers.Quantity = IngredientQuantity;
+                                                IngredientQuantity = 0;
                                             }
                                             else
                                             {
                                                 invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
-                                                CurrentQuantity = CurrentQuantity - AvailableQuantity;
+                                                IngredientQuantity = IngredientQuantity - AvailableQuantity;
                                             }
                                             invoice.Lines.BatchNumbers.Add();
                                         };
@@ -148,7 +145,7 @@ namespace SAP_ARInvoice.Controllers
                                     CurrentCount += 1;
                                     recordSetOBTN.MoveNext();
                                 }
-                                if (!CurrentQuantity.Equals(0))
+                                if (!IngredientQuantity.Equals(0))
                                 {
                                     _logger.LogError($"Not Enough Data in Given Batch");
                                     return "SAP B1 Background service";
