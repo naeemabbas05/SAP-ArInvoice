@@ -71,7 +71,7 @@ namespace SAP_ARInvoice.Controllers
 
                         invoice.Lines.ItemCode = OrderItem.ItemCode;
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
-                        //invoice.Lines.WarehouseCode = "05";
+                        invoice.Lines.WarehouseCode = OrderItem.WareHouse;
                         invoice.Lines.Quantity = OrderItem.Quantity;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
@@ -82,6 +82,8 @@ namespace SAP_ARInvoice.Controllers
                         //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
 
 
+                        invoice.Lines.Add();
+
                         #region Batch wise Item
                         SAPbobsCOM.Items product = null;
                         SAPbobsCOM.Recordset recordSet = null;
@@ -90,12 +92,20 @@ namespace SAP_ARInvoice.Controllers
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        recordSet.DoQuery($"SELECT \"Code\" FROM \"ITT1\" WHERE \"Father\"='{OrderItem.ItemCode}'");
+                        //Update WareHouse For Child Items
+                        recordSet.DoQuery($"UPDATE  \"ITT1\" SET \"Warehouse\"='{OrderItem.WareHouse}'  WHERE \"Father\"='{OrderItem.ItemCode}'");
+
+                        recordSet.DoQuery($"SELECT T0.\"Code\",T1.\"Qauntity\" FROM  \"ITT1\" T0  INNER JOIN \"OITT\" T1 ON T0.\"Father\" = T1.\"Code\" WHERE T0.\"Father\"='{OrderItem.ItemCode}'");
                         if (recordSet.RecordCount != 0)
                         {
                             while (!recordSet.EoF)
                             {
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
+                                var IngredientQuantity = recordSet.Fields.Item(1).Value.ToString();
+
+                                invoice.Lines.ItemCode = itemCode;
+                                invoice.Lines.Quantity = IngredientQuantity;
+
                                 recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
                                 var CurrentQuantity = OrderItem.Quantity;
                                 var TotalCount = recordSetOBTN.RecordCount;
@@ -133,8 +143,7 @@ namespace SAP_ARInvoice.Controllers
                                     _logger.LogError($"Not Enough Data in Given Batch");
                                     return "SAP B1 Background service";
                                 }
-
-
+                                invoice.Lines.Add();
                             }
                         }
                         else
@@ -143,9 +152,6 @@ namespace SAP_ARInvoice.Controllers
                             return "SAP B1 Background service";
                         }
                         #endregion
-
-
-                        invoice.Lines.Add();
                     }
 
                     if (invoice.Add() == 0)
@@ -177,7 +183,7 @@ namespace SAP_ARInvoice.Controllers
             List<DataModel> resp = data.Select(x => new { x.CustName, x.OrderCode }).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode == x.OrderCode)).Distinct().ToList();
             foreach (var item in resp)
             {
-                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity) }).Distinct().ToList();
+                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse }).Distinct().ToList();
                 orders.Add(new Orders() { CustName = item.CustName, OrderCode = item.OrderCode, OrderDate = item.OrderDate, OrderDetail = orderDetail });
             }
 
