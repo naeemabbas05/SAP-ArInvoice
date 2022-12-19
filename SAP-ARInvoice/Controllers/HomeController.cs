@@ -64,6 +64,7 @@ namespace SAP_ARInvoice.Controllers
                     invoice.CardCode = singleInvoice.CustName;
                     invoice.DocDueDate = DateTime.Now;
                     invoice.DocDate = DateTime.Now;
+                    invoice.NumAtCard = singleInvoice.OrderCode;
                     //UDF Invoice 
                     //invoice.UserFields.Fields.Item("bill_no").Value = "";
 
@@ -71,7 +72,7 @@ namespace SAP_ARInvoice.Controllers
 
                         invoice.Lines.ItemCode = OrderItem.ItemCode;
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
-                        invoice.Lines.WarehouseCode = OrderItem.WareHouse;
+                        //invoice.Lines.WarehouseCode = OrderItem.WareHouse;
                         invoice.Lines.Quantity = OrderItem.Quantity;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
@@ -83,6 +84,7 @@ namespace SAP_ARInvoice.Controllers
 
 
                         invoice.Lines.Add();
+
 
                         #region Batch wise Item
                         SAPbobsCOM.Items product = null;
@@ -96,15 +98,19 @@ namespace SAP_ARInvoice.Controllers
                         recordSet.DoQuery($"UPDATE  \"ITT1\" SET \"Warehouse\"='{OrderItem.WareHouse}'  WHERE \"Father\"='{OrderItem.ItemCode}'");
 
                         recordSet.DoQuery($"SELECT T0.\"Code\",T1.\"Qauntity\" FROM  \"ITT1\" T0  INNER JOIN \"OITT\" T1 ON T0.\"Father\" = T1.\"Code\" WHERE T0.\"Father\"='{OrderItem.ItemCode}'");
+                        var BOMTotal = recordSet.RecordCount;
+                        var BOMCurrentCount = 0;
                         if (recordSet.RecordCount != 0)
                         {
-                            while (!recordSet.EoF)
+                            while (BOMTotal > BOMCurrentCount)
                             {
+                                
+
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
                                 var IngredientQuantity = recordSet.Fields.Item(1).Value.ToString();
 
                                 invoice.Lines.ItemCode = itemCode;
-                                invoice.Lines.Quantity = IngredientQuantity;
+                                invoice.Lines.Quantity = double.Parse(IngredientQuantity);
 
                                 recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
                                 var CurrentQuantity = OrderItem.Quantity;
@@ -113,16 +119,19 @@ namespace SAP_ARInvoice.Controllers
 
                                 while (TotalCount > CurrentCount)
                                 {
+                                   
+
                                     if (CurrentQuantity > 0) {
                                         var ExpDate = recordSetOBTN.Fields.Item(0).Value.ToString();
                                         var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
                                         var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
                                         if (int.Parse(AvailableQuantity) > 0) {
+                                            invoice.Lines.BatchNumbers.SetCurrentLine(CurrentCount);
                                             invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
                                             invoice.Lines.BatchNumbers.ItemCode = itemCode;
-                                            invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
+                                            //invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
 
-                                            if (AvailableQuantity >= CurrentQuantity)
+                                            if (int.Parse(AvailableQuantity) >= CurrentQuantity)
                                             {
                                                 invoice.Lines.BatchNumbers.Quantity = CurrentQuantity;
                                                 CurrentQuantity = 0;
@@ -137,6 +146,7 @@ namespace SAP_ARInvoice.Controllers
                                        
                                     }
                                     CurrentCount += 1;
+                                    recordSetOBTN.MoveNext();
                                 }
                                 if (!CurrentQuantity.Equals(0))
                                 {
@@ -144,6 +154,8 @@ namespace SAP_ARInvoice.Controllers
                                     return "SAP B1 Background service";
                                 }
                                 invoice.Lines.Add();
+                                BOMCurrentCount += 1;
+                                recordSet.MoveNext();
                             }
                         }
                         else
@@ -151,6 +163,7 @@ namespace SAP_ARInvoice.Controllers
                             _logger.LogError($"No BOM found angainst given Item");
                             return "SAP B1 Background service";
                         }
+
                         #endregion
                     }
 
@@ -278,7 +291,7 @@ namespace SAP_ARInvoice.Controllers
             SAPbobsCOM.Recordset recordSet = null;
             recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
             //Need to add Column Accordingly
-            recordSet.DoQuery($"SELECT * FROM \"OINV\" WHERE \"bill_no\"='{orderCode}'");
+            recordSet.DoQuery($"SELECT * FROM \"OINV\" WHERE \"NumAtCard\"='{orderCode}'");
             if (recordSet.RecordCount > 0)
             {
                 output = true;
