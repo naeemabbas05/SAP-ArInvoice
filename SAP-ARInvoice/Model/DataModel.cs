@@ -12,6 +12,7 @@ namespace SAP_ARInvoice.Model
         public string OrderDate { get; set; }
         public string ItemCode { get; set; }
         public string Quantity { get; set; }
+        public string WareHouse { get; set; }
     }
 
    

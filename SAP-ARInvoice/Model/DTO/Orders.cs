@@ -16,5 +16,6 @@ namespace SAP_ARInvoice.Model.DTO
     {
         public string ItemCode { get; set; }
         public int Quantity { get; set; }
+        public string WareHouse { get; set; }
     }
 }
