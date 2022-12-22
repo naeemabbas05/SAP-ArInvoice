@@ -21,5 +21,6 @@ namespace SAP_ARInvoice.Model.DTO
         public string BankDiscount { get; set; }
         public string TaxCode { get; set; }
         public string TaxAmount { get; set; }
+        public string Section { get; set; }
     }
 }
