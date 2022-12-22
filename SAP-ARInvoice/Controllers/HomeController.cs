@@ -93,7 +93,7 @@ namespace SAP_ARInvoice.Controllers
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}'");
+                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND T0.\"U_Section\"='{OrderItem.Section}'");
                         var BOMTotal = recordSet.RecordCount;
                         var BOMCurrentCount = 0;
                         if (recordSet.RecordCount != 0)
@@ -186,7 +186,7 @@ namespace SAP_ARInvoice.Controllers
             List<DataModel> resp = data.Select(x => new { x.CustName, x.OrderCode }).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode == x.OrderCode)).Distinct().ToList();
             foreach (var item in resp)
             {
-                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse,BankDiscount=x.BankDiscount,CostCenter=x.CostCenter,TaxAmount=x.TaxAmount,TaxCode=x.TaxCode }).Distinct().ToList();
+                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse,BankDiscount=x.BankDiscount,CostCenter=x.CostCenter,TaxAmount=x.TaxAmount,TaxCode=x.TaxCode,Section = x.Section }).Distinct().ToList();
                 orders.Add(new Orders() { CustName = item.CustName, OrderCode = item.OrderCode, OrderDate = item.OrderDate, OrderDetail = orderDetail });
             }
 
