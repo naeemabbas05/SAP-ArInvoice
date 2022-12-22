@@ -13,6 +13,10 @@ namespace SAP_ARInvoice.Model
         public string ItemCode { get; set; }
         public string Quantity { get; set; }
         public string WareHouse { get; set; }
+        public string CostCenter { get; set; }
+        public string BankDiscount { get; set; }
+        public string TaxCode { get; set; }
+        public string TaxAmount { get; set; }
     }
 
    

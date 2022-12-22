@@ -25,6 +25,7 @@ namespace SAP_ARInvoice.Controllers
             _logger = logger;
         }
 
+
         [HttpGet]
         public async Task<string> GetAsync()
         {
@@ -65,14 +66,12 @@ namespace SAP_ARInvoice.Controllers
                     invoice.DocDueDate = DateTime.Now;
                     invoice.DocDate = DateTime.Now;
                     invoice.NumAtCard = singleInvoice.OrderCode;
-                    //UDF Invoice 
-                    //invoice.UserFields.Fields.Item("bill_no").Value = "";
 
                     foreach (var OrderItem in singleInvoice.OrderDetail) {
 
                         invoice.Lines.ItemCode = OrderItem.ItemCode;
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
-                        //invoice.Lines.WarehouseCode = OrderItem.WareHouse;
+                        invoice.Lines.WarehouseCode = OrderItem.WareHouse;
                         invoice.Lines.Quantity = OrderItem.Quantity;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
@@ -81,9 +80,9 @@ namespace SAP_ARInvoice.Controllers
                         //invoice.Lines.UserFields.Fields.Item("bank_discount").Value = "00:00";
                         //invoice.Lines.UserFields.Fields.Item("tax_code").Value = "";
                         //invoice.Lines.UserFields.Fields.Item("tax_amount").Value = "";
+                        invoice.Lines.Add();
 
 
-                     
 
 
                         #region Batch wise Item
@@ -94,10 +93,7 @@ namespace SAP_ARInvoice.Controllers
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        //Update WareHouse For Child Items
-                        recordSet.DoQuery($"UPDATE  \"ITT1\" SET \"Warehouse\"='{OrderItem.WareHouse}'  WHERE \"Father\"='{OrderItem.ItemCode}'");
-
-                        recordSet.DoQuery($"SELECT T0.\"Code\",T1.\"Qauntity\" FROM  \"ITT1\" T0  INNER JOIN \"OITT\" T1 ON T0.\"Father\" = T1.\"Code\" WHERE T0.\"Father\"='{OrderItem.ItemCode}'");
+                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}'");
                         var BOMTotal = recordSet.RecordCount;
                         var BOMCurrentCount = 0;
                         if (recordSet.RecordCount != 0)
@@ -107,8 +103,8 @@ namespace SAP_ARInvoice.Controllers
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
                                 var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
 
-                                //invoice.Lines.ItemCode = itemCode;
-                                //invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
+                                invoice.Lines.ItemCode = itemCode;
+                                invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
                                 recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
                                 var TotalCount = recordSetOBTN.RecordCount;
@@ -121,7 +117,6 @@ namespace SAP_ARInvoice.Controllers
                                         var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
                                         var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
                                         if (int.Parse(AvailableQuantity) > 0) {
-                                            invoice.Lines.BatchNumbers.SetCurrentLine(CurrentCount);
                                             invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
                                             invoice.Lines.BatchNumbers.ItemCode = itemCode;
                                             //invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
@@ -133,8 +128,8 @@ namespace SAP_ARInvoice.Controllers
                                             }
                                             else
                                             {
-                                                invoice.Lines.BatchNumbers.Quantity = AvailableQuantity;
-                                                IngredientQuantity = IngredientQuantity - AvailableQuantity;
+                                                invoice.Lines.BatchNumbers.Quantity = int.Parse(AvailableQuantity);
+                                                IngredientQuantity = IngredientQuantity - int.Parse(AvailableQuantity);
                                             }
                                             invoice.Lines.BatchNumbers.Add();
                                         };
@@ -148,7 +143,7 @@ namespace SAP_ARInvoice.Controllers
                                     _logger.LogError($"Not Enough Data in Given Batch");
                                     return "SAP B1 Background service";
                                 }
-                                //invoice.Lines.Add();
+                                invoice.Lines.Add();
                                 BOMCurrentCount += 1;
                                 recordSet.MoveNext();
                             }
@@ -160,9 +155,8 @@ namespace SAP_ARInvoice.Controllers
                         }
 
                         #endregion
-                        invoice.Lines.Add();
+                     
                     }
-
                     if (invoice.Add() == 0)
                     {
                         _logger.LogInformation($"Record added successfully");
@@ -192,7 +186,7 @@ namespace SAP_ARInvoice.Controllers
             List<DataModel> resp = data.Select(x => new { x.CustName, x.OrderCode }).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode == x.OrderCode)).Distinct().ToList();
             foreach (var item in resp)
             {
-                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse }).Distinct().ToList();
+                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse,BankDiscount=x.BankDiscount,CostCenter=x.CostCenter,TaxAmount=x.TaxAmount,TaxCode=x.TaxCode }).Distinct().ToList();
                 orders.Add(new Orders() { CustName = item.CustName, OrderCode = item.OrderCode, OrderDate = item.OrderDate, OrderDetail = orderDetail });
             }
 
