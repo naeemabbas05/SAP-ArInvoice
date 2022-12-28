@@ -54,9 +54,9 @@ namespace SAP_ARInvoice.Controllers
                         return "SAP B1 Background service";
                     }
 
-                    var invocieResponse = CheckIfInvoiceExist(singleInvoice.OrderCode);
-                    if (invocieResponse) {
-                        _logger.LogError("Invoice Already Exist");
+                    var arMemo = CheckIfArMemoExist(singleInvoice.OrderCode);
+                    if (arMemo) {
+                        _logger.LogError("AR Memo Already Exist");
                         return "SAP B1 Background service";
                     }
 
@@ -93,7 +93,7 @@ namespace SAP_ARInvoice.Controllers
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND T0.\"U_Section\"='{OrderItem.Section}'");
+                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND T0.\"U_Section\"='{OrderItem.Section}' AND NOT T1.\"U_ItemCode\" IS NULL");
                         var BOMTotal = recordSet.RecordCount;
                         var BOMCurrentCount = 0;
                         if (recordSet.RecordCount != 0)
@@ -275,7 +275,7 @@ namespace SAP_ARInvoice.Controllers
             return   output;
         }
 
-        private bool CheckIfInvoiceExist(string orderCode)
+        private bool CheckIfArMemoExist(string orderCode)
         {
             bool output = false;
             SAPbobsCOM.Recordset recordSet = null;

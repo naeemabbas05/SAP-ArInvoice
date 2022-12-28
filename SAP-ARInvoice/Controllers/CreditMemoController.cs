@@ -89,78 +89,77 @@ namespace SAP_ARInvoice.Controllers
 
 
 
-                        #region Batch wise Item
-                        SAPbobsCOM.Items product = null;
-                        SAPbobsCOM.Recordset recordSet = null;
-                        SAPbobsCOM.Recordset recordSetOBTN = null;
-                        recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
-                        recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
-                        product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
+                        //#region Batch wise Item
+                        //SAPbobsCOM.Items product = null;
+                        //SAPbobsCOM.Recordset recordSet = null;
+                        //SAPbobsCOM.Recordset recordSetOBTN = null;
+                        //recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
+                        //recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
+                        //product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
 
-                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND T0.\"U_Section\"='{OrderItem.Section}'");
-                        var BOMTotal = recordSet.RecordCount;
-                        var BOMCurrentCount = 0;
-                        if (recordSet.RecordCount != 0)
-                        {
-                            while (BOMTotal > BOMCurrentCount)
-                            {
-                                var itemCode = recordSet.Fields.Item(0).Value.ToString();
-                                var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
+                        //recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}'"); 
+                        //var BOMTotal = recordSet.RecordCount;
+                        //var BOMCurrentCount = 0;
+                        //if (recordSet.RecordCount != 0)
+                        //{
+                        //    while (BOMTotal > BOMCurrentCount)
+                        //    {
+                        //        var itemCode = recordSet.Fields.Item(0).Value.ToString();
+                        //        var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
 
-                                invoice.Lines.ItemCode = itemCode;
-                                invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
+                        //        invoice.Lines.ItemCode = itemCode;
+                        //        invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
-                                recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
-                                var TotalCount = recordSetOBTN.RecordCount;
-                                var CurrentCount = 0;
+                        //        recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
+                        //        var TotalCount = recordSetOBTN.RecordCount;
+                        //        var CurrentCount = 0;
+                        //        while (TotalCount > CurrentCount)
+                        //        {
+                        //            if (IngredientQuantity > 0)
+                        //            {
+                        //                var ExpDate = recordSetOBTN.Fields.Item(0).Value.ToString();
+                        //                var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
+                        //                var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
+                        //                if (int.Parse(AvailableQuantity) > 0)
+                        //                {
+                        //                    invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
+                        //                    invoice.Lines.BatchNumbers.ItemCode = itemCode;
+                        //                    //invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
 
-                                while (TotalCount > CurrentCount)
-                                {
-                                    if (IngredientQuantity > 0)
-                                    {
-                                        var ExpDate = recordSetOBTN.Fields.Item(0).Value.ToString();
-                                        var AvailableQuantity = recordSetOBTN.Fields.Item(1).Value.ToString();
-                                        var BatchNumber = recordSetOBTN.Fields.Item(2).Value.ToString();
-                                        if (int.Parse(AvailableQuantity) > 0)
-                                        {
-                                            invoice.Lines.BatchNumbers.BatchNumber = BatchNumber;
-                                            invoice.Lines.BatchNumbers.ItemCode = itemCode;
-                                            //invoice.Lines.BatchNumbers.ExpiryDate = ExpDate;
+                        //                    if (int.Parse(AvailableQuantity) >= IngredientQuantity)
+                        //                    {
+                        //                        invoice.Lines.BatchNumbers.Quantity = IngredientQuantity;
+                        //                        IngredientQuantity = 0;
+                        //                    }
+                        //                    else
+                        //                    {
+                        //                        invoice.Lines.BatchNumbers.Quantity = int.Parse(AvailableQuantity);
+                        //                        IngredientQuantity = IngredientQuantity - int.Parse(AvailableQuantity);
+                        //                    }
+                        //                    invoice.Lines.BatchNumbers.Add();
+                        //                };
 
-                                            if (int.Parse(AvailableQuantity) >= IngredientQuantity)
-                                            {
-                                                invoice.Lines.BatchNumbers.Quantity = IngredientQuantity;
-                                                IngredientQuantity = 0;
-                                            }
-                                            else
-                                            {
-                                                invoice.Lines.BatchNumbers.Quantity = int.Parse(AvailableQuantity);
-                                                IngredientQuantity = IngredientQuantity - int.Parse(AvailableQuantity);
-                                            }
-                                            invoice.Lines.BatchNumbers.Add();
-                                        };
+                        //            }
+                        //            CurrentCount += 1;
+                        //            recordSetOBTN.MoveNext();
+                        //        }
+                        //        if (!IngredientQuantity.Equals(0))
+                        //        {
+                        //            _logger.LogError($"Not Enough Data in Given Batch");
+                        //            return "SAP B1 Background service";
+                        //        }
+                        //        invoice.Lines.Add();
+                        //        BOMCurrentCount += 1;
+                        //        recordSet.MoveNext();
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    _logger.LogError($"No BOM found angainst given Item");
+                        //    return "SAP B1 Background service";
+                        //}
 
-                                    }
-                                    CurrentCount += 1;
-                                    recordSetOBTN.MoveNext();
-                                }
-                                if (!IngredientQuantity.Equals(0))
-                                {
-                                    _logger.LogError($"Not Enough Data in Given Batch");
-                                    return "SAP B1 Background service";
-                                }
-                                invoice.Lines.Add();
-                                BOMCurrentCount += 1;
-                                recordSet.MoveNext();
-                            }
-                        }
-                        else
-                        {
-                            _logger.LogError($"No BOM found angainst given Item");
-                            return "SAP B1 Background service";
-                        }
-
-                        #endregion
+                        //#endregion
 
                     }
                     if (invoice.Add() == 0)
