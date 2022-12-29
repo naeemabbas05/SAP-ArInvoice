@@ -57,7 +57,7 @@ namespace SAP_ARInvoice.Controllers
                     var arMemo = CheckIfArMemoExist(singleInvoice.OrderCode);
                     if (arMemo) {
                         _logger.LogError("AR Memo Already Exist");
-                        return "SAP B1 Background service";
+                        continue;
                     }
 
                     invoice = connection.GetCompany().GetBusinessObject(BoObjectTypes.oInvoices);
@@ -92,8 +92,8 @@ namespace SAP_ARInvoice.Controllers
                         recordSet = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         recordSetOBTN = connection.GetCompany().GetBusinessObject(BoObjectTypes.BoRecordset);
                         product = connection.GetCompany().GetBusinessObject(BoObjectTypes.oItems);
-
-                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND T0.\"U_Section\"='{OrderItem.Section}' AND NOT T1.\"U_ItemCode\" IS NULL");
+                        
+                        recordSet.DoQuery($"select T1.\"U_ItemCode\",T1.\"U_Qty\",T1.\"U_Whs\" from \"@BOMH\" T0 INNER JOIN \"@BOMR\" T1 ON T0.\"DocEntry\"=T1.\"DocEntry\" WHERE T0.\"U_ItemCode\"='{OrderItem.ItemCode}' AND NOT T1.\"U_ItemCode\" IS NULL AND T0.\"U_Whs\"='{OrderItem.WareHouse}'"); //AND T0.\"U_Section\"='{OrderItem.Section}'
                         var BOMTotal = recordSet.RecordCount;
                         var BOMCurrentCount = 0;
                         if (recordSet.RecordCount != 0)
@@ -102,11 +102,14 @@ namespace SAP_ARInvoice.Controllers
                             {
                                 var itemCode = recordSet.Fields.Item(0).Value.ToString();
                                 var IngredientQuantity = int.Parse(recordSet.Fields.Item(1).Value.ToString()) * OrderItem.Quantity;
-
+                                var whs = recordSet.Fields.Item(2).Value.ToString();
                                 invoice.Lines.ItemCode = itemCode;
+                                invoice.Lines.WarehouseCode = whs;
                                 invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
-                                recordSetOBTN.DoQuery($"SELECT \"ExpDate\",\"Quantity\",\"DistNumber\" FROM \"OBTN\" WHERE \"ItemCode\"='{itemCode}'  Order By \"ExpDate\"");
+                                //recordSetOBTN.DoQuery($"SELECT T0.\"ExpDate\",T1.\"Quantity\",T0.\"DistNumber\" FROM \"OBTN\" T0 INNER JOIN \"IBT1\" T1 ON T1.\"ItemCode\" = T0.\"ItemCode\" WHERE T0.\"ItemCode\"='{itemCode}'  Order By  ");
+
+                                recordSetOBTN.DoQuery($"select T0.\"ItemCode\",T1.\"Quantity\", T0.\"DistNumber\" from \"OBTN\" T0 inner join \"OBTQ\" T1 on T0.\"ItemCode\" = T1.\"ItemCode\" and T0.\"SysNumber\" = T1.\"SysNumber\" inner join \"OITM\" T2 on T0.\"ItemCode\" = T2.\"ItemCode\" where T1.\"Quantity\" > 0 and T0.\"ItemCode\" = '{itemCode}' and T1.\"WhsCode\"='{whs}' order by T0.\"ExpDate\"");
                                 var TotalCount = recordSetOBTN.RecordCount;
                                 var CurrentCount = 0;
 
