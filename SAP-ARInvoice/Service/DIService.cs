@@ -30,14 +30,11 @@ namespace SAP_ARInvoice.Service
         public Task StartAsync(CancellationToken cancellationToken)
         {
             timer = new Timer(o => {
-                //action
-
                 logger.LogInformation($"Background Service");
-
             },
           null,
           TimeSpan.Zero,
-          TimeSpan.FromSeconds(10));
+          TimeSpan.FromHours(2));
 
             return Task.CompletedTask;
         }
