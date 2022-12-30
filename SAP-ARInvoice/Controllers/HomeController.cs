@@ -107,8 +107,6 @@ namespace SAP_ARInvoice.Controllers
                                 invoice.Lines.WarehouseCode = whs;
                                 invoice.Lines.Quantity = double.Parse($"{IngredientQuantity}");
 
-                                //recordSetOBTN.DoQuery($"SELECT T0.\"ExpDate\",T1.\"Quantity\",T0.\"DistNumber\" FROM \"OBTN\" T0 INNER JOIN \"IBT1\" T1 ON T1.\"ItemCode\" = T0.\"ItemCode\" WHERE T0.\"ItemCode\"='{itemCode}'  Order By  ");
-
                                 recordSetOBTN.DoQuery($"select T0.\"ItemCode\",T1.\"Quantity\", T0.\"DistNumber\" from \"OBTN\" T0 inner join \"OBTQ\" T1 on T0.\"ItemCode\" = T1.\"ItemCode\" and T0.\"SysNumber\" = T1.\"SysNumber\" inner join \"OITM\" T2 on T0.\"ItemCode\" = T2.\"ItemCode\" where T1.\"Quantity\" > 0 and T0.\"ItemCode\" = '{itemCode}' and T1.\"WhsCode\"='{whs}' order by T0.\"ExpDate\"");
                                 var TotalCount = recordSetOBTN.RecordCount;
                                 var CurrentCount = 0;
