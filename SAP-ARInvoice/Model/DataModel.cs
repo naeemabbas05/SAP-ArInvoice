@@ -18,6 +18,7 @@ namespace SAP_ARInvoice.Model
         public string TaxCode { get; set; }
         public string TaxAmount { get; set; }
         public string Section { get; set; }
+        public string UnitPrice { get; set; }
     }
 
    
