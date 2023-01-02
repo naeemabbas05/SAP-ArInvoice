@@ -73,6 +73,12 @@ namespace SAP_ARInvoice.Controllers
                         invoice.Lines.ItemDescription = OrderItem.ItemCode;
                         invoice.Lines.WarehouseCode = OrderItem.WareHouse;
                         invoice.Lines.Quantity = OrderItem.Quantity;
+                        invoice.Lines.UnitPrice = OrderItem.UnitPrice;
+                        //invoice.Lines.Expenses.ExpenseCode =0;
+                        //invoice.Lines.Expenses.TaxSum = 0;
+                        //invoice.Lines.Expenses.Add();
+
+                        //invoice.Lines.tax = 0;
                         //Branch
                         //invoice.Lines.COGSCostingCode3 = "";
                         //UDF Invoice Lines
@@ -187,7 +193,7 @@ namespace SAP_ARInvoice.Controllers
             List<DataModel> resp = data.Select(x => new { x.CustName, x.OrderCode }).Distinct().Select(x => data.FirstOrDefault(r => r.CustName == x.CustName && r.OrderCode == x.OrderCode)).Distinct().ToList();
             foreach (var item in resp)
             {
-                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse,BankDiscount=x.BankDiscount,CostCenter=x.CostCenter,TaxAmount=x.TaxAmount,TaxCode=x.TaxCode,Section = x.Section }).Distinct().ToList();
+                var orderDetail = data.Where(x => x.OrderCode == item.OrderCode && x.CustName == item.CustName).Select(x => new OrderDetail { ItemCode = x.ItemCode, Quantity = int.Parse(x.Quantity),WareHouse=x.WareHouse,BankDiscount=x.BankDiscount,CostCenter=x.CostCenter,TaxAmount=x.TaxAmount,TaxCode=x.TaxCode,Section = x.Section,UnitPrice=double.Parse(x.UnitPrice) }).Distinct().ToList();
                 orders.Add(new Orders() { CustName = item.CustName, OrderCode = item.OrderCode, OrderDate = item.OrderDate, OrderDetail = orderDetail });
             }
 
@@ -213,7 +219,6 @@ namespace SAP_ARInvoice.Controllers
                     {
                         product.ItemCode = item.ItemCode;
                         product.ItemName = item.ItemDescription;
-                        product.PurchaseItemsPerUnit = Double.Parse(item.UnitPrice);
 
                         var resp = product.Add();
                         if (resp.Equals(0))

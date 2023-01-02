@@ -22,5 +22,6 @@ namespace SAP_ARInvoice.Model.DTO
         public string TaxCode { get; set; }
         public string TaxAmount { get; set; }
         public string Section { get; set; }
+        public double UnitPrice { get; set; }
     }
 }
