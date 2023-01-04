@@ -54,7 +54,7 @@ namespace SAP_ARInvoice.Controllers
                         return "SAP B1 Background service";
                     }
 
-                    var arMemo = CheckIfArMemoExist(singleInvoice.OrderCode);
+                    var arMemo = CheckIfItemExist(singleInvoice.OrderCode);
                     if (arMemo)
                     {
                         _logger.LogError("AR Invoice Already Exist");
@@ -298,7 +298,7 @@ namespace SAP_ARInvoice.Controllers
             return output;
         }
 
-        private bool CheckIfArMemoExist(string orderCode)
+        private bool CheckIfItemExist(string orderCode)
         {
             bool output = false;
             SAPbobsCOM.Recordset recordSet = null;

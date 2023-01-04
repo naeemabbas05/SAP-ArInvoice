@@ -49,7 +49,7 @@ namespace SAP_ARInvoice.Controllers
                         return "SAP B1 Background service";
                     }
 
-                    var productResponse = await CheckItemExist(singleInvoice.OrderDetail);
+                    var productResponse = await CheckIfArMemoExist(singleInvoice.OrderDetail);
                     if (!productResponse)
                     {
                         _logger.LogError("Unable to Create New Item");
@@ -130,7 +130,7 @@ namespace SAP_ARInvoice.Controllers
             return orders;
         }
 
-        private async Task<bool> CheckItemExist(List<OrderDetail> orderDetail)
+        private async Task<bool> CheckIfArMemoExist(List<OrderDetail> orderDetail)
         {
             bool output = false;
             SAPbobsCOM.Items product = null;
